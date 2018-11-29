@@ -1,0 +1,9 @@
+/node_modules
+/dist
+/.awcache
+*.log
+\.env
+
+server/files/
+
+doc/

@@ -1,0 +1,62 @@
+<div class="container">
+    <div class="sidebar">
+        <div class="contact" *ngFor="let contact of contacts">
+            <div class="name">{{ contact.name }}</div>
+            <div class="status">{{ contact.id }}</div>
+            <div class="isOnline">{{ contact.isOnline }}</div>
+            <button (click)="connect(contact.id)">Talk</button>
+            <button (click)="become(contact)">Become</button>
+        </div>
+    </div>
+    <div class="chat">
+        <div class="message-container">
+            <div class="message" *ngFor="let message of messages">
+                <div class="sender">{{ message.sender.name }}</div>
+                <div
+                    class="content"
+                    [innerHTML]="
+                        message.content
+                            | basicEmoji
+                            | linkify
+                            | markdown
+                            | emojis
+                    "
+                ></div>
+                <div class="timestamp">
+                    {{ message.timestamp | date: 'shortTime' }}
+                </div>
+                <div class="attachment" *ngIf="message.attachment">
+                    <a
+                        target="_blank"
+                        href="{{message.attachment.downloadUrl}}"
+                        >{{ message.attachment.name }}</a
+                    >
+                </div>
+                <div class="actions" *ngIf="message.sender.id === me.id">
+                    <button (click)="delete(message.id)">Delete</button>
+                    <button (click)="startEditing(message)" *ngIf="!message.attachment">Edit</button>
+                </div>
+                <span *ngIf="message.edited"> Edited </span>
+            </div>
+            <div class="is-writing" *ngIf="writingContacts.length">
+                {{ writingContacts.join(', ') }}
+                {{ writingContacts.length === 1 ? 'is' : 'are' }} writing...
+            </div>
+        </div>
+        <div class="chatbox">
+            <input type="file" (change)="upload($event)"/>
+            <input
+                #newMessage
+                type="text"
+                [(ngModel)]="newMsg"
+                placeholder="New message"
+                (keyup)="isWriting()"
+                (keyup.enter)="onMessageSent(newMessage.value)"
+                (keyup.esc)="cancelEditing()"
+            />
+            <button *ngIf="editing" (click)="cancelEditing()">
+                Cancel Edit
+            </button>
+        </div>
+    </div>
+</div>
