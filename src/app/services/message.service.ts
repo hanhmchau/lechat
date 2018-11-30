@@ -32,18 +32,38 @@ export class MessageService {
         this.contactCollectionRef = db.collection('contacts');
     }
 
+    sendFirstMessage(message: Message, channel: string, contacts: Contact[]) {
+        this.sendMessage(message, channel).subscribe();
+        const memberCol = this.channelCollectionRef
+            .doc(channel)
+            .collection('members');
+        contacts.forEach(cont => {
+            this.contactCollectionRef
+                .doc(cont.id)
+                .collection<Channel>('channels')
+                .doc(channel).set({
+                    id: channel
+                });
+            memberCol.add(cont);
+        });
+    }
+
     sendMessage(message: Message, channel: string): Observable<string> {
         return Observable.create((observer: Observer<string>) => {
             const channelObj = this.channelCollectionRef.doc(channel);
+            const now = new Date();
             channelObj
                 .collection<Message>('messages')
                 .add({
                     ...message,
-                    timestamp: new Date()
+                    timestamp: now
                 })
                 .then((val: DocumentReference) => {
                     observer.next(val.id);
                 });
+            channelObj.set({
+                lastMessageSent: now
+            });
         });
     }
 
@@ -70,12 +90,26 @@ export class MessageService {
             .pipe(this.mapDocToData<Contact>());
     }
 
-    getMessages(channel: string): Observable<Message[]> {
+    getMessages(
+        channel: string,
+        sender: Contact,
+        before?: Message,
+        limit: number = 10
+    ): Observable<Message[]> {
+        const filter = before
+            ? (ref: firebase.firestore.CollectionReference) =>
+                  ref
+                      .orderBy('timestamp', 'desc')
+                      .startAfter(before.timestamp)
+                      .limit(limit)
+            : (ref: firebase.firestore.CollectionReference) =>
+                  ref.orderBy('timestamp', 'desc').limit(limit);
+        this.contactCollectionRef.doc(sender.id).collection('channels').doc(channel).set({
+            lastRead: new Date()
+        });
         return this.channelCollectionRef
             .doc(channel)
-            .collection('messages', ref =>
-                ref.orderBy('timestamp', 'desc').limit(10)
-            )
+            .collection('messages', filter)
             .snapshotChanges()
             .pipe(
                 this.mapDocToData<Message>(),
@@ -86,6 +120,19 @@ export class MessageService {
                         timestamp: (msg.timestamp as any).toDate()
                     }))
                 )
+            );
+    }
+
+    getMyChannelsInfo(contact: Contact): Observable<any[]> {
+        return this.contactCollectionRef
+            .doc(contact.id)
+            .collection('channels')
+            .snapshotChanges()
+            .pipe(
+                map((val) => val.map(v => ({
+                    ...v.payload.doc.data(),
+                    id: v.payload.doc.id
+                })))
             );
     }
 

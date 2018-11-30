@@ -20,6 +20,8 @@ import { AngularFireStorageModule } from '@angular/fire/storage';
 import { NgxLinkifyjsModule } from 'ngx-linkifyjs';
 import { MarkdownModule } from 'ngx-markdown';
 import { Ng2EmojiModule } from 'ng2-emoji';
+import { InfiniteScrollModule } from 'ngx-infinite-scroll';
+import { ScrollEventModule } from 'ngx-scroll-event';
 
 const config = {
     apiKey: 'AIzaSyAqygACZQfcFvVg9XpDUZ2QiB0aRQEN1tA',
@@ -53,7 +55,9 @@ const config = {
         AngularFireStorageModule,
         NgxLinkifyjsModule.forRoot(),
         MarkdownModule.forRoot(),
-        Ng2EmojiModule.forRoot()
+        Ng2EmojiModule.forRoot(),
+        InfiniteScrollModule,
+        ScrollEventModule
     ],
     exports: [],
     providers: [
