@@ -29,7 +29,6 @@ export class MessageComponent {
         const url = urls.values().next();
         if (url.value && /\.(?:jpg|gif|png)$/.test(url.value)) {
             this.previewImage = url.value;
-            console.log(this.previewImage);
         }
     }
 

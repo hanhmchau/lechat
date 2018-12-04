@@ -73,6 +73,22 @@ a[href="https://www.froala.com/wysiwyg-editor?k=u"] {
     top: -99999999px;
 }
 
+textarea:hover,
+input:hover,
+textarea:active,
+input:active,
+textarea:focus,
+input:focus,
+button:focus,
+button:active,
+button:hover,
+label:focus,
+.btn:active,
+.btn.active {
+    outline: 0px !important;
+    -webkit-appearance: none;
+}
+
 #article_content div,
 #article_content span {
     max-width: 800px !important;
@@ -120,8 +136,8 @@ body {
     }
 }
 
-.emoji{
-    display:inline-block;
+.emoji {
+    display: inline-block;
     width: 20px;
     height: 20px;
 }

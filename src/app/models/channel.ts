@@ -8,4 +8,6 @@ export default class Channel {
     members?: Contact[] = [];
     messages?: Message[] = [];
     otherContact?: Contact;
+    lastMessageSent?: Date;
+    lastRead?: Date;
 }

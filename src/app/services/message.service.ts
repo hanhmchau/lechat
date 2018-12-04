@@ -62,6 +62,22 @@ export class MessageService {
         });
     }
 
+    addToChannelList(otherId: string, channelId: string) {
+        this.contactCollectionRef
+            .doc(otherId)
+            .collection<Channel>('channels')
+            .doc(channelId)
+            .set(
+                {
+                    id: channelId,
+                    type: 'IM'
+                },
+                {
+                    merge: true
+                }
+            );
+    }
+
     createIMChannel(id: string, me: Contact, otherSide: Contact) {
         const channel = this.channelCollectionRef.doc(id);
         const meName = `${me.id}_name`;
@@ -72,44 +88,21 @@ export class MessageService {
                 [meName]: otherSide.name,
                 [otherSide.id]: me.id,
                 [otherName]: me.name,
-                type: 'IM'
+                type: 'IM',
+                lastMessageSent: new Date()
             },
             {
                 merge: true
             }
         );
-        this.contactCollectionRef
-            .doc(me.id)
-            .collection<Channel>('channels')
-            .doc(id)
-            .set(
-                {
-                    id,
-                    type: 'IM'
-                },
-                {
-                    merge: true
-                }
-            );
-        this.contactCollectionRef
-            .doc(otherSide.id)
-            .collection<Channel>('channels')
-            .doc(id)
-            .set(
-                {
-                    id,
-                    type: 'IM'
-                },
-                {
-                    merge: true
-                }
-            );
+        this.addToChannelList(me.id, id);
     }
 
     sendFirstMessage(message: Message, channel: string, contacts: Contact[]) {
         this.sendMessage(message, channel).subscribe();
         const me = message.sender;
         const otherSide = contacts.filter(c => c.id !== message.sender.id)[0];
+        this.addToChannelList(otherSide.id, channel);
         // this.createIMChannel(channel, me, otherSide);
     }
 
@@ -160,6 +153,21 @@ export class MessageService {
             .pipe(this.mapDocToData<Contact>());
     }
 
+    read(channel: string, sender: string) {
+        this.contactCollectionRef
+            .doc(sender)
+            .collection('channels')
+            .doc(channel)
+            .set(
+                {
+                    lastRead: new Date()
+                },
+                {
+                    merge: true
+                }
+            );
+    }
+
     getMessages(
         channel: string,
         sender: Contact,
@@ -174,18 +182,7 @@ export class MessageService {
                       .limit(limit)
             : (ref: firebase.firestore.CollectionReference) =>
                   ref.orderBy('timestamp', 'desc').limit(limit);
-        this.contactCollectionRef
-            .doc(sender.id)
-            .collection('channels')
-            .doc(channel)
-            .set(
-                {
-                    lastRead: new Date()
-                },
-                {
-                    merge: true
-                }
-            );
+        this.read(channel, sender.id);
         return this.channelCollectionRef
             .doc(channel)
             .collection('messages', filter)
@@ -255,31 +252,35 @@ export class MessageService {
             .delete();
     }
 
-    uploadFile(sender: Contact, channel: string, file: File) {
+    uploadFile(sender: Contact, channel: string, file: File): Observable<any> {
         // The storage path
-        const path = `${channel}/${new Date().getTime()}_${file.name}`;
+        return Observable.create((observer: Observer<any>) => {
+            const path = `${channel}/${new Date().getTime()}_${file.name}`;
 
-        // Totally optional metadata
-        const customMetadata = { name: file.name };
+            // Totally optional metadata
+            const customMetadata = { name: file.name };
 
-        // The main task
-        const task = this.afStorage
-            .upload(path, file, { customMetadata })
-            .then(snapshot => snapshot.ref.getDownloadURL())
-            .then(downloadUrl => {
-                this.sendMessage(
-                    {
-                        content: '',
-                        sender,
-                        attachment: {
-                            name: file.name,
-                            size: file.size,
-                            downloadUrl
-                        }
-                    },
-                    channel
-                ).subscribe();
-            });
+            // The main task
+            const task = this.afStorage
+                .upload(path, file, { customMetadata })
+                .then(snapshot => snapshot.ref.getDownloadURL())
+                .then(downloadUrl => {
+                    this.sendMessage(
+                        {
+                            content: '',
+                            sender,
+                            attachment: {
+                                name: file.name,
+                                size: file.size,
+                                downloadUrl
+                            }
+                        },
+                        channel
+                    ).subscribe(() => {
+                        observer.next(true);
+                    });
+                });
+        });
     }
 
     generateContacts() {

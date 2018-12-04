@@ -1,5 +1,6 @@
+import { AuthService } from './../services/auth.service';
 import { Component, ElementRef, ViewChild } from '@angular/core';
-import { Subject, combineLatest, Observable } from 'rxjs';
+import { Subject, combineLatest, Observable, Subscription } from 'rxjs';
 import {
     debounceTime,
     distinctUntilChanged,
@@ -23,6 +24,7 @@ export class ChatContainerComponent {
     private writingContacts: string[] = [];
     private messages: Message[] = [];
     private activeChannel: string;
+    private activeContactOrChannel: string;
     private newMsg = '';
     private editingMessage: Message;
     private newMessageWritingSubject = new Subject();
@@ -30,16 +32,27 @@ export class ChatContainerComponent {
     private scrollTop = 0;
     private memorizedScrollTop = 0;
     private memorizedScrollHeight = 0;
+    private loading = false;
+    private getMessages$: Subscription;
+    private getChannelData$: Subscription;
+    private isWriting$: Subscription;
+    private isNotWriting$: Subscription;
+    private getWritingMembers$: Subscription;
+    private scrollTop$: Subscription;
     @ViewChild('messageContainer') private messageContainer: ElementRef;
     @ViewChild('inputFile') private inputFile: ElementRef;
 
-    constructor(private messageService: MessageService) {}
+    constructor(
+        private messageService: MessageService,
+        private authService: AuthService
+    ) {}
 
     ngOnInit(): void {
         this.messageService.getContacts().subscribe(contacts => {
             this.contacts = contacts;
         });
         const container = this.messageContainer.nativeElement;
+        this.become(this.authService.getCurrentUser());
         container.addEventListener('scroll', (e: any) => {
             if (
                 this.activeChannel &&
@@ -87,6 +100,7 @@ export class ChatContainerComponent {
     }
 
     onMessageSent(content: string) {
+        content = content.trim();
         if (this.activeChannel && content.trim()) {
             if (this.editingMessage) {
                 this.updateMessage(content);
@@ -102,26 +116,42 @@ export class ChatContainerComponent {
         this.messageService.generateContacts();
     }
 
+    unsubscribe() {
+        if (this.getMessages$) {
+            this.getMessages$.unsubscribe();
+            this.getChannelData$.unsubscribe();
+            this.isWriting$.unsubscribe();
+            this.isNotWriting$.unsubscribe();
+            this.getWritingMembers$.unsubscribe();
+            this.scrollTop$.unsubscribe();
+        }
+    }
+
     connect(contactId: string) {
         this.messages = [];
+        this.unsubscribe();
+        this.activeContactOrChannel = contactId;
         this.activeChannel =
             this.me.id < contactId
                 ? `${this.me.id}_${contactId}`
                 : `${contactId}_${this.me.id}`;
         this.them = this.contacts.find(c => c.id === contactId);
-        this.messageService
+        this.getMessages$ = this.messageService
             .getMessages(this.activeChannel, this.me)
             .subscribe(messages => {
                 this.messages = messages;
                 this.scrollToBottom();
+                this.messageService.read(this.activeChannel, this.me.id);
             });
         this.messageService.createIMChannel(
             this.activeChannel,
             this.me,
             this.them
         );
-        this.messageService.getChannelData(this.activeChannel).subscribe();
-        this.newMessageWritingSubject
+        this.getChannelData$ = this.messageService
+            .getChannelData(this.activeChannel)
+            .subscribe();
+        this.isNotWriting$ = this.newMessageWritingSubject
             .asObservable()
             .pipe(debounceTime(1500))
             .subscribe(() => {
@@ -130,20 +160,20 @@ export class ChatContainerComponent {
                     this.activeChannel
                 );
             });
-        this.newMessageWritingSubject
+        this.isWriting$ = this.newMessageWritingSubject
             .asObservable()
             .pipe(throttleTime(1000))
             .subscribe(() => {
                 this.messageService.setIsWriting(this.me, this.activeChannel);
             });
-        this.messageService
+        this.getWritingMembers$ = this.messageService
             .getWritingMembersInChannel(this.activeChannel)
             .subscribe(contacts => {
                 this.writingContacts = contacts
                     .filter(c => c.id !== this.me.id)
                     .map(c => c.name);
             });
-        this.scrolledTopSubject
+        this.scrollTop$ = this.scrolledTopSubject
             .asObservable()
             .pipe(
                 distinctUntilChanged(),
@@ -178,6 +208,12 @@ export class ChatContainerComponent {
         return this.messageContainer.nativeElement.scrollTop;
     }
 
+    toDate(seconds: number) {
+        const date = new Date();
+        date.setSeconds(seconds);
+        return date;
+    }
+
     become(contact: Contact) {
         this.me = contact;
         this.messageService.getMyChannelsInfo(this.me).subscribe(channels => {
@@ -188,6 +224,8 @@ export class ChatContainerComponent {
                     .map((c, i) => ({
                         ...c,
                         lastRead: channels[i].lastRead
+                            ? this.toDate(channels[i].lastRead.seconds)
+                            : undefined
                     }))
                     .map(c =>
                         c.type === 'IM'
@@ -196,11 +234,22 @@ export class ChatContainerComponent {
                                   name: (c as any)[
                                       `${this.me.id}_name`
                                   ] as string,
-                                  id: (c as any)[this.me.id] as string
+                                  id: (c as any)[this.me.id] as string,
+                                  lastMessageSent: c.lastMessageSent
+                                      ? this.toDate(
+                                            ((c as any)
+                                                .lastMessageSent as any).seconds
+                                        )
+                                      : undefined
                               }
                             : c
                     );
-                this.myChannels = channelInfos;
+                this.myChannels = channelInfos
+                    .sort(c =>
+                        c.lastMessageSent ? c.lastMessageSent.getTime() : 0
+                    )
+                    .reverse();
+                console.log(this.myChannels);
                 // use this to build the contact list
                 // compare lastRead with lastMessageSent to show unread channels
             });
@@ -227,11 +276,12 @@ export class ChatContainerComponent {
     }
 
     upload(ev: any) {
-        this.messageService.uploadFile(
-            this.me,
-            this.activeChannel,
-            ev.target.files[0]
-        );
+        this.loading = true;
+        this.messageService
+            .uploadFile(this.me, this.activeChannel, ev.target.files[0])
+            .subscribe(() => {
+                this.loading = false;
+            });
     }
 
     loadMore() {

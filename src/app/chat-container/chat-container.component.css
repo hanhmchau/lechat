@@ -1,4 +1,3 @@
-
 :host {
     height: calc(100vh - 54px) !important;
 }
@@ -48,7 +47,7 @@
     width: 100%;
     background-color: transparent;
     font-family: 'Roboto';
-    padding: 21px 10px 0 10px;
+    line-height: 45px;
 }
 
 textarea:placeholder {
@@ -56,7 +55,7 @@ textarea:placeholder {
     font-weight: 500;
 }
 
-input[type="file"] {
+input[type='file'] {
     width: 0;
     opacity: 0;
 }
@@ -72,4 +71,47 @@ mat-icon {
 
 .buttons button {
     display: inline-block;
+}
+
+.progress-bar {
+    position: fixed;
+    top: 0;
+}
+
+.no-conversation {
+    text-align: center;
+    padding-top: 30px;
+    color: gray;
+}
+
+.channel {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    cursor: pointer;
+}
+
+.channel.active {
+    background-color: #ededed;
+}
+
+.channel.unread:not(.active) .channel-name {
+    font-weight: 700;
+}
+
+.channel:hover {
+    background-color: #e8e8e8;
+}
+
+.channel-avatar {
+}
+
+.channel-name {
+    margin-left: 20px;
+}
+
+.is-writing {
+    font-size: 14px;
+    font-style: italic;
+    color: gray;
 }

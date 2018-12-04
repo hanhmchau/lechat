@@ -4,15 +4,15 @@
             <mat-icon>more_vert</mat-icon>
         </button>
         <mat-menu #menu="matMenu">
-            <button mat-menu-item (click)="startEditing()">
+            <button
+                mat-menu-item
+                (click)="startEditing()"
+                *ngIf="!message.attachment"
+            >
                 <mat-icon>edit</mat-icon>
                 <span>Edit</span>
             </button>
-            <button
-                mat-menu-item
-                (click)="delete()"
-                *ngIf="!message.attachment"
-            >
+            <button mat-menu-item (click)="delete()">
                 <mat-icon>delete</mat-icon>
                 <span>Delete</span>
             </button>
@@ -29,19 +29,21 @@
             </span>
         </div>
         <ng-container *ngIf="message.attachment; else: text">
-            <div class="attachment">
-                <div>
-                    <mat-icon>file</mat-icon>
-                </div>
-                <div>
-                    <a
-                        target="_blank"
-                        href="{{message.attachment.downloadUrl}}"
-                        >{{ message.attachment.name }}</a
-                    >
-                    <div>{{ message.attachment.size | prettyBytes }}</div>
-                </div>
-            </div>
+            <a target="_blank" class="attachment-url" [href]="message.attachment.downloadUrl">
+                <mat-card class="attachment">
+                    <mat-card-header>
+                        <div mat-card-avatar class="example-header-image">
+                            <mat-icon>vertical_align_bottom</mat-icon>
+                        </div>
+                        <mat-card-title>{{
+                            message.attachment.name
+                        }}</mat-card-title>
+                        <mat-card-subtitle>{{
+                            message.attachment.size | prettyBytes
+                        }}</mat-card-subtitle>
+                    </mat-card-header>
+                </mat-card>
+            </a>
         </ng-container>
         <ng-template #text>
             <div

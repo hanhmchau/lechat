@@ -1,31 +1,36 @@
-import { BasicEmojiPipe } from './pipes/basic-emoji.pipe';
-import { EmojifyPipe } from './pipes/emojify.pipe';
-import { PrettyBytesPipe } from './pipes/pretty-bytes.pipe';
-import { JdenticonHashDirective } from './directives/jdenticon-hash.directive';
-import { AngularFirestore } from '@angular/fire/firestore';
-import { MessageService } from './services/message.service';
-import { ChatContainerComponent } from './chat-container/chat-container.component';
+import { AuthGuard } from './guards/auth.guard';
+import { AuthService } from './services/auth.service';
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
+import { AngularFireModule } from '@angular/fire';
+import { AngularFireAuthModule } from '@angular/fire/auth';
+import { AngularFireDatabaseModule } from '@angular/fire/database';
+import { AngularFirestore } from '@angular/fire/firestore';
+import { AngularFireStorageModule } from '@angular/fire/storage';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgSelectModule } from '@ng-select/ng-select';
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
-import { MessageComponent } from './message/message.component';
-import { MaterialModule } from './material.module';
-import { NotFoundComponent } from './not-found/not-found.component';
-import { RoutingService } from './routing.service';
-import { AngularFireModule } from '@angular/fire';
-import { AngularFireDatabaseModule } from '@angular/fire/database';
-import { AngularFireStorageModule } from '@angular/fire/storage';
-import { NgxLinkifyjsModule } from 'ngx-linkifyjs';
-import { MarkdownModule } from 'ngx-markdown';
 import { Ng2EmojiModule } from 'ng2-emoji';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
+import { NgxLinkifyjsModule } from 'ngx-linkifyjs';
+import { MarkdownModule } from 'ngx-markdown';
 import { ScrollEventModule } from 'ngx-scroll-event';
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { ChatContainerComponent } from './chat-container/chat-container.component';
+import { JdenticonHashDirective } from './directives/jdenticon-hash.directive';
+import { LoginComponent } from './login/login.component';
+import { MaterialModule } from './material.module';
+import { MessageComponent } from './message/message.component';
+import { NotFoundComponent } from './not-found/not-found.component';
+import { BasicEmojiPipe } from './pipes/basic-emoji.pipe';
+import { EmojifyPipe } from './pipes/emojify.pipe';
+import { PrettyBytesPipe } from './pipes/pretty-bytes.pipe';
+import { RegisterComponent } from './register/register.component';
+import { RoutingService } from './routing.service';
+import { MessageService } from './services/message.service';
 
 const config = {
     apiKey: 'AIzaSyAqygACZQfcFvVg9XpDUZ2QiB0aRQEN1tA',
@@ -46,7 +51,9 @@ const config = {
         BasicEmojiPipe,
         EmojifyPipe,
         PrettyBytesPipe,
-        JdenticonHashDirective
+        JdenticonHashDirective,
+        LoginComponent,
+        RegisterComponent
     ],
     imports: [
         BrowserModule,
@@ -65,13 +72,16 @@ const config = {
         MarkdownModule.forRoot(),
         Ng2EmojiModule.forRoot(),
         InfiniteScrollModule,
-        ScrollEventModule
+        ScrollEventModule,
+        AngularFireAuthModule
     ],
     exports: [],
     providers: [
         RoutingService,
         MessageService,
-        AngularFirestore
+        AuthService,
+        AngularFirestore,
+        AuthGuard
         // add injectable things here
     ],
     bootstrap: [AppComponent]

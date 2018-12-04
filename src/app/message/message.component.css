@@ -11,11 +11,15 @@
 .sender {
     font-size: 12px;
     color: darkgray;
+}
+
+.message.me .sender {
     text-align: right;
 }
 
 .content {
-    background-color: #F6F6F6;
+    background-color: #f6f6f6;
+    margin-top: 5px;
     padding: 15px;
     border-radius: 5px;
     font-size: 14px;
@@ -66,13 +70,16 @@ mat-icon {
 }
 
 .attachment {
-    min-width: 150px;
+    min-width: 350px;
     border: 1px solid lightgray;
     border-radius: 4px;
 }
 
 .preview-image {
     margin-top: 10px;
+}
+
+.message.me .preview-image {
     text-align: right;
 }
 
@@ -80,4 +87,17 @@ mat-icon {
     max-width: 200px;
     border: 1px solid lightgray;
     border-radius: 8px;
+}
+
+mat-card-title {
+    color: black !important;
+    font-size: 16px !important;
+}
+
+.attachment-url {
+    text-decoration: none !important;
+}
+
+.example-header-image {
+    text-align: center;
 }
