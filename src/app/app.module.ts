@@ -1,4 +1,7 @@
 import { BasicEmojiPipe } from './pipes/basic-emoji.pipe';
+import { EmojifyPipe } from './pipes/emojify.pipe';
+import { PrettyBytesPipe } from './pipes/pretty-bytes.pipe';
+import { JdenticonHashDirective } from './directives/jdenticon-hash.directive';
 import { AngularFirestore } from '@angular/fire/firestore';
 import { MessageService } from './services/message.service';
 import { ChatContainerComponent } from './chat-container/chat-container.component';
@@ -11,6 +14,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { MessageComponent } from './message/message.component';
 import { MaterialModule } from './material.module';
 import { NotFoundComponent } from './not-found/not-found.component';
 import { RoutingService } from './routing.service';
@@ -36,9 +40,13 @@ const config = {
     declarations: [
         // add components here
         AppComponent,
+        MessageComponent,
         NotFoundComponent,
         ChatContainerComponent,
-        BasicEmojiPipe
+        BasicEmojiPipe,
+        EmojifyPipe,
+        PrettyBytesPipe,
+        JdenticonHashDirective
     ],
     imports: [
         BrowserModule,

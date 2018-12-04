@@ -1,0 +1,59 @@
+<div class="message" [class.me]="message.sender.id === me.id">
+    <div class="actions" *ngIf="message.sender.id === me.id">
+        <button class="menu" mat-icon-button [matMenuTriggerFor]="menu">
+            <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="startEditing()">
+                <mat-icon>edit</mat-icon>
+                <span>Edit</span>
+            </button>
+            <button
+                mat-menu-item
+                (click)="delete()"
+                *ngIf="!message.attachment"
+            >
+                <mat-icon>delete</mat-icon>
+                <span>Delete</span>
+            </button>
+        </mat-menu>
+    </div>
+    <div class="sender-avatar" *ngIf="message.sender.id !== me.id">
+        <svg width="40" height="40" [jdenticonHash]="message.sender.id"></svg>
+    </div>
+    <div class="message-content">
+        <div class="sender">
+            <span class="name">{{ message.sender.name }}, </span>
+            <span class="timestamp">
+                {{ message.timestamp | date: 'shortTime' }}
+            </span>
+        </div>
+        <ng-container *ngIf="message.attachment; else: text">
+            <div class="attachment">
+                <div>
+                    <mat-icon>file</mat-icon>
+                </div>
+                <div>
+                    <a
+                        target="_blank"
+                        href="{{message.attachment.downloadUrl}}"
+                        >{{ message.attachment.name }}</a
+                    >
+                    <div>{{ message.attachment.size | prettyBytes }}</div>
+                </div>
+            </div>
+        </ng-container>
+        <ng-template #text>
+            <div
+                class="content"
+                [innerHTML]="message.content | basicEmoji | linkify | emojify"
+            ></div>
+        </ng-template>
+        <div class="preview-image" *ngIf="previewImage">
+            <img [src]="previewImage" />
+        </div>
+    </div>
+    <span class="edited-icon" *ngIf="message.edited">
+        <mat-icon>edit</mat-icon>
+    </span>
+</div>

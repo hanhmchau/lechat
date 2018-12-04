@@ -1,4 +1,4 @@
-@import '~@angular/material/prebuilt-themes/indigo-pink.css';
+@import '~@angular/material/prebuilt-themes/deeppurple-amber.css';
 @import '~ng2-emoji/css/ng2-emoji.css';
 
 body {
@@ -122,4 +122,11 @@ body {
 
 .emoji{
     display:inline-block;
+    width: 20px;
+    height: 20px;
+}
+
+.message-content p {
+    padding: none !important;
+    line-height: 0;
 }

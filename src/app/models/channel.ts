@@ -7,4 +7,5 @@ export default class Channel {
     type?: string;
     members?: Contact[] = [];
     messages?: Message[] = [];
+    otherContact?: Contact;
 }

@@ -1,6 +1,36 @@
 .container {
 }
 
+
+.mat-toolbar-row,
+.mat-toolbar-single-row {
+    height: 54px !important;
+    font-size: 15px;
+    justify-content: center;
+    background-color: white;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.example-spacer {
+    flex: 1 1 auto;
+}
+
+.logo,
+.title {
+    padding-left: 0.5rem;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+a:hover,
+a:visited,
+a:link,
+a:active {
+    text-decoration: none;
+    color: #8f8ce8;
+}
+
+
 /* // Extra small devices (portrait phones, less than 576px)
 // No media query since this is the default in Bootstrap */
 

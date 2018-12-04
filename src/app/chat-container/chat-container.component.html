@@ -1,11 +1,27 @@
 <div class="container">
     <div class="sidebar">
-        <div class="contact" *ngFor="let contact of contacts">
-            <div class="name">{{ contact.name }}</div>
-            <div class="isOnline">{{ contact.isOnline }}</div>
-            <button (click)="connect(contact.id)">Talk</button>
-            <button (click)="become(contact)">Become</button>
-        </div>
+        <mat-tab-group>
+            <mat-tab>
+                <ng-template mat-tab-label>
+                    <mat-icon class="example-tab-icon">chat</mat-icon>
+                </ng-template>
+                <div class="contact" *ngFor="let channel of myChannels">
+                    <div class="name">{{ channel.name }}</div>
+                    <button (click)="connect(channel.id)">Talk</button>
+                </div>
+            </mat-tab>
+            <mat-tab>
+                <ng-template mat-tab-label>
+                    <mat-icon class="example-tab-icon">person</mat-icon>
+                </ng-template>
+                <div class="contact" *ngFor="let contact of contacts">
+                    <div class="name">{{ contact.name }}</div>
+                    <div class="isOnline">{{ contact.isOnline }}</div>
+                    <button (click)="connect(contact.id)">Contact</button>
+                    <button (click)="become(contact)">Become</button>
+                </div>
+            </mat-tab></mat-tab-group
+        >
     </div>
     <div class="chat">
         <div
@@ -17,38 +33,15 @@
             (scrolledUp)="handleScroll2()"
             [scrollWindow]="true"
         >
-            <div class="message" *ngFor="let message of messages">
-                <div class="sender">{{ message.sender.name }}</div>
-                <div
-                    class="content"
-                    [innerHTML]="
-                        message.content
-                            | basicEmoji
-                            | linkify
-                            | markdown
-                            | emojis
-                    "
-                ></div>
-                <div class="timestamp">
-                    {{ message.timestamp | date: 'shortTime' }}
-                </div>
-                <div class="attachment" *ngIf="message.attachment">
-                    <a
-                        target="_blank"
-                        href="{{message.attachment.downloadUrl}}"
-                        >{{ message.attachment.name }}</a
-                    >
-                </div>
-                <div class="actions" *ngIf="message.sender.id === me.id">
-                    <button (click)="delete(message.id)">Delete</button>
-                    <button
-                        (click)="startEditing(message)"
-                        *ngIf="!message.attachment"
-                    >
-                        Edit
-                    </button>
-                </div>
-                <span *ngIf="message.edited"> Edited </span>
+            <div class="messages">
+                <app-message
+                    [message]="message"
+                    [me]="me"
+                    (onDelete)="delete($event)"
+                    (onEdit)="startEditing($event)"
+                    *ngFor="let message of messages"
+                >
+                </app-message>
             </div>
             <div class="is-writing" *ngIf="writingContacts.length">
                 {{ writingContacts.join(', ') }}
@@ -56,16 +49,34 @@
             </div>
         </div>
         <div class="chatbox">
-            <input type="file" (change)="upload($event)" />
-            <input
+            <button
+                class="file-button"
+                mat-icon-button
+                (click)="triggerInputFile()"
+            >
+                <mat-icon aria-label="Example icon-button with a heart icon"
+                    >attachment</mat-icon
+                >
+            </button>
+            <textarea
+                rows="1"
+                class="new-message-input"
                 #newMessage
                 type="text"
                 [(ngModel)]="newMsg"
-                placeholder="New message"
+                placeholder="Type a message here"
                 (keyup)="isWriting()"
                 (keyup.enter)="onMessageSent(newMessage.value)"
                 (keyup.esc)="cancelEditing()"
-            />
+            ></textarea>
+            <input #inputFile type="file" (change)="upload($event)" />
+            <div class="buttons">
+                <button class="emoji-button" mat-icon-button>
+                    <mat-icon aria-label="Example icon-button with a heart icon"
+                        >tag_faces</mat-icon
+                    >
+                </button>
+            </div>
             <button *ngIf="editing" (click)="cancelEditing()">
                 Cancel Edit
             </button>

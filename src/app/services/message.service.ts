@@ -14,6 +14,7 @@ import { map, tap } from 'rxjs/operators';
 import Message from '../models/message';
 import Channel from '../models/channel';
 import Contact from '../models/contact';
+import Preview from '../models/preview';
 import * as firebase from 'firebase';
 
 @Injectable({
@@ -32,20 +33,84 @@ export class MessageService {
         this.contactCollectionRef = db.collection('contacts');
     }
 
-    sendFirstMessage(message: Message, channel: string, contacts: Contact[]) {
-        this.sendMessage(message, channel).subscribe();
+    getUrlPreview(url: string): Observable<Preview> {
+        const key = '5c0555fa5b015f1dc455e50d6446d285982d5296004e2';
+        return this.http.get<Preview>(
+            `http://api.linkpreview.net/?key=${key}&q=${url}`
+        );
+    }
+
+    createChannel(id: string, name: string, contacts: Contact[]) {
         const memberCol = this.channelCollectionRef
-            .doc(channel)
+            .doc(id)
             .collection('members');
         contacts.forEach(cont => {
             this.contactCollectionRef
                 .doc(cont.id)
                 .collection<Channel>('channels')
-                .doc(channel).set({
-                    id: channel
-                });
-            memberCol.add(cont);
+                .doc(id)
+                .set(
+                    {
+                        id,
+                        name
+                    },
+                    {
+                        merge: true
+                    }
+                );
+            memberCol.doc(cont.id).set(cont);
         });
+    }
+
+    createIMChannel(id: string, me: Contact, otherSide: Contact) {
+        const channel = this.channelCollectionRef.doc(id);
+        const meName = `${me.id}_name`;
+        const otherName = `${otherSide.id}_name`;
+        channel.set(
+            {
+                [me.id]: otherSide.id,
+                [meName]: otherSide.name,
+                [otherSide.id]: me.id,
+                [otherName]: me.name,
+                type: 'IM'
+            },
+            {
+                merge: true
+            }
+        );
+        this.contactCollectionRef
+            .doc(me.id)
+            .collection<Channel>('channels')
+            .doc(id)
+            .set(
+                {
+                    id,
+                    type: 'IM'
+                },
+                {
+                    merge: true
+                }
+            );
+        this.contactCollectionRef
+            .doc(otherSide.id)
+            .collection<Channel>('channels')
+            .doc(id)
+            .set(
+                {
+                    id,
+                    type: 'IM'
+                },
+                {
+                    merge: true
+                }
+            );
+    }
+
+    sendFirstMessage(message: Message, channel: string, contacts: Contact[]) {
+        this.sendMessage(message, channel).subscribe();
+        const me = message.sender;
+        const otherSide = contacts.filter(c => c.id !== message.sender.id)[0];
+        // this.createIMChannel(channel, me, otherSide);
     }
 
     sendMessage(message: Message, channel: string): Observable<string> {
@@ -61,9 +126,14 @@ export class MessageService {
                 .then((val: DocumentReference) => {
                     observer.next(val.id);
                 });
-            channelObj.set({
-                lastMessageSent: now
-            });
+            channelObj.set(
+                {
+                    lastMessageSent: now
+                },
+                {
+                    merge: true
+                }
+            );
         });
     }
 
@@ -104,9 +174,18 @@ export class MessageService {
                       .limit(limit)
             : (ref: firebase.firestore.CollectionReference) =>
                   ref.orderBy('timestamp', 'desc').limit(limit);
-        this.contactCollectionRef.doc(sender.id).collection('channels').doc(channel).set({
-            lastRead: new Date()
-        });
+        this.contactCollectionRef
+            .doc(sender.id)
+            .collection('channels')
+            .doc(channel)
+            .set(
+                {
+                    lastRead: new Date()
+                },
+                {
+                    merge: true
+                }
+            );
         return this.channelCollectionRef
             .doc(channel)
             .collection('messages', filter)
@@ -123,16 +202,18 @@ export class MessageService {
             );
     }
 
-    getMyChannelsInfo(contact: Contact): Observable<any[]> {
+    getMyChannelsInfo(me: Contact): Observable<any[]> {
         return this.contactCollectionRef
-            .doc(contact.id)
+            .doc(me.id)
             .collection('channels')
             .snapshotChanges()
             .pipe(
-                map((val) => val.map(v => ({
-                    ...v.payload.doc.data(),
-                    id: v.payload.doc.id
-                })))
+                map(val =>
+                    val.map(v => ({
+                        ...v.payload.doc.data(),
+                        id: v.payload.doc.id
+                    }))
+                )
             );
     }
 
@@ -141,9 +222,10 @@ export class MessageService {
             .doc(channel)
             .snapshotChanges()
             .pipe(
-                map((value: Action<DocumentSnapshot<Channel>>) =>
-                    value.payload.data()
-                )
+                map((value: Action<DocumentSnapshot<Channel>>) => ({
+                    ...value.payload.data(),
+                    id: channel
+                }))
             );
     }
 

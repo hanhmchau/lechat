@@ -27,7 +27,11 @@ export class ChatContainerComponent {
     private editingMessage: Message;
     private newMessageWritingSubject = new Subject();
     private scrolledTopSubject = new Subject();
+    private scrollTop = 0;
+    private memorizedScrollTop = 0;
+    private memorizedScrollHeight = 0;
     @ViewChild('messageContainer') private messageContainer: ElementRef;
+    @ViewChild('inputFile') private inputFile: ElementRef;
 
     constructor(private messageService: MessageService) {}
 
@@ -36,16 +40,17 @@ export class ChatContainerComponent {
             this.contacts = contacts;
         });
         const container = this.messageContainer.nativeElement;
-        container.addEventListener('wheel', (e: any) => {
+        container.addEventListener('scroll', (e: any) => {
             if (
                 this.activeChannel &&
                 this.me &&
-                e.deltaY < 0 &&
+                container.scrollTop <= this.scrollTop &&
                 container.scrollTop <= 150
             ) {
                 // scrolling up
                 this.emitScrollTop();
             }
+            this.scrollTop = container.scrollTop;
         });
     }
 
@@ -108,10 +113,14 @@ export class ChatContainerComponent {
             .getMessages(this.activeChannel, this.me)
             .subscribe(messages => {
                 this.messages = messages;
+                this.scrollToBottom();
             });
-        this.messageService
-            .getChannelData(this.activeChannel)
-            .subscribe(console.log);
+        this.messageService.createIMChannel(
+            this.activeChannel,
+            this.me,
+            this.them
+        );
+        this.messageService.getChannelData(this.activeChannel).subscribe();
         this.newMessageWritingSubject
             .asObservable()
             .pipe(debounceTime(1500))
@@ -145,17 +154,53 @@ export class ChatContainerComponent {
             });
     }
 
+    resumeScrollPosition() {
+        setTimeout(() => {
+            const container = this.messageContainer.nativeElement;
+            container.scrollTop =
+                this.memorizedScrollTop +
+                (this.getContainerScrollHeight() - this.memorizedScrollHeight);
+        }, 0);
+    }
+
+    rememberScrollPosition() {
+        setTimeout(() => {
+            this.memorizedScrollTop = this.getContainerScrollTop();
+            this.memorizedScrollHeight = this.getContainerScrollHeight();
+        }, 0);
+    }
+
+    getContainerScrollHeight() {
+        return this.messageContainer.nativeElement.scrollHeight;
+    }
+
+    getContainerScrollTop() {
+        return this.messageContainer.nativeElement.scrollTop;
+    }
+
     become(contact: Contact) {
         this.me = contact;
         this.messageService.getMyChannelsInfo(this.me).subscribe(channels => {
             combineLatest(
                 channels.map(c => this.messageService.getChannelData(c.id))
             ).subscribe(results => {
-                const channelInfos = results.filter(c => !!c).map((c, i) => ({
-                    ...c,
-                    lastRead: channels[i].lastRead
-                }));
-                console.log(channelInfos);
+                const channelInfos = results
+                    .map((c, i) => ({
+                        ...c,
+                        lastRead: channels[i].lastRead
+                    }))
+                    .map(c =>
+                        c.type === 'IM'
+                            ? {
+                                  ...c,
+                                  name: (c as any)[
+                                      `${this.me.id}_name`
+                                  ] as string,
+                                  id: (c as any)[this.me.id] as string
+                              }
+                            : c
+                    );
+                this.myChannels = channelInfos;
                 // use this to build the contact list
                 // compare lastRead with lastMessageSent to show unread channels
             });
@@ -193,7 +238,9 @@ export class ChatContainerComponent {
         this.messageService
             .getMessages(this.activeChannel, this.me, this.messages[0], 3)
             .subscribe(messages => {
+                this.rememberScrollPosition();
                 this.messages = [...messages, ...this.messages];
+                this.resumeScrollPosition();
             });
     }
 
@@ -201,5 +248,16 @@ export class ChatContainerComponent {
         this.scrolledTopSubject.next(
             this.messages.length ? this.messages[0].id : '-1'
         );
+    }
+
+    triggerInputFile() {
+        (this.inputFile.nativeElement as HTMLElement).click();
+    }
+
+    private scrollToBottom() {
+        setTimeout(() => {
+            const container = this.messageContainer.nativeElement;
+            container.scrollTop = this.getContainerScrollHeight();
+        }, 0);
     }
 }

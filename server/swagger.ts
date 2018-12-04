@@ -21,4 +21,3 @@ const options = {
 
 // initialize swagger-jsdoc
 const swaggerSpec = swaggerJSDoc(options);
-console.log(swaggerSpec);

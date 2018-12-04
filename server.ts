@@ -31,7 +31,6 @@ app.use(express.static(dist));
 app.get('*', (req: express.Request, res: express.Response) => {
     res.sendFile(dist + '/index.html', null, (err: Error) => {
         if (err) {
-            console.log(err);
         }
     });
 });
