@@ -53,6 +53,8 @@ export class ContactModalComponent {
     }
 
     connect(id: string) {
+        this.contacts = this.contacts.filter(c => c.id !== id);
+        this.contactGroups = this.alphabetizeContacts(this.contacts);
         this.dialogData.onConnect.emit(id);
     }
 
