@@ -6,26 +6,43 @@
 <div class="container">
     <div class="sidebar">
         <div class="current-user" *ngIf="me">
-            <svg width="40" height="40" [jdenticonHash]="me.id"></svg>
-            <h4 class="title">{{ me.name }}</h4>
-            <div class="add">
-                <button mat-icon-button [matMenuTriggerFor]="setting">
-                    <mat-icon>more_vert</mat-icon>
-                </button>
-                <mat-menu #setting="matMenu">
-                    <app-contact-list
-                        [me]="me"
-                        [contacts]="unaddedContacts"
-                        (onConnect)="connect($event)"
-                    ></app-contact-list>
-                    <button mat-menu-item (click)="logOut()">
-                        <mat-icon>exit_to_app</mat-icon>
-                        <span>Sign out</span>
+            <div class="current-user-title">
+                <div class="mat-h1">Miniature Chat</div>
+                <div class="add">
+                    <button mat-icon-button [matMenuTriggerFor]="setting">
+                        <mat-icon>more_vert</mat-icon>
                     </button>
-                </mat-menu>
+                    <mat-menu #setting="matMenu">
+                        <app-contact-list
+                            [me]="me"
+                            [contacts]="unaddedContacts"
+                            (onConnect)="connect($event)"
+                        ></app-contact-list>
+                        <button mat-menu-item (click)="logOut()">
+                            <mat-icon>exit_to_app</mat-icon>
+                            <span>Sign out</span>
+                        </button>
+                    </mat-menu>
+                </div>
+            </div>
+            <div class="current-user-name">
+                <svg width="20" height="20" [jdenticonHash]="me.id"></svg>
+                <span class="title mat-small">{{ me.name }}</span>
             </div>
         </div>
-        <div *ngFor="let channel of myChannels">
+        <div class="search">
+            <mat-form-field class="example-form-field">
+                <input
+                    matInput
+                    type="text"
+                    placeholder="Search"
+                    [formControl]="searchChannelControl"
+                />
+                <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+        </div>
+
+        <div *ngFor="let channel of myFilteredChannels">
             <div
                 class="channel"
                 [class.unread]="
@@ -45,7 +62,7 @@
                 <div class="channel-name">{{ channel.name }}</div>
             </div>
         </div>
-        <div class="no-conversation" *ngIf="!myChannels.length">
+        <div class="no-conversation" *ngIf="!myChannels.length && channelLoaded">
             You have no conversations yet.
         </div>
     </div>

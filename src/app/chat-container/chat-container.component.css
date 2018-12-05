@@ -13,7 +13,7 @@
 
 .sidebar {
     flex: 1 0 20%;
-    border-right: 1px solid #e8e8e8;
+    background-color: #e8e8e8;
 }
 
 .chat {
@@ -92,7 +92,7 @@ mat-icon {
 }
 
 .channel.active {
-    background-color: #ededed;
+    background-color: white;
 }
 
 .channel.unread:not(.active) .channel-name {
@@ -100,7 +100,7 @@ mat-icon {
 }
 
 .channel:hover {
-    background-color: #e8e8e8;
+    background-color: lightgray;
 }
 
 .channel-avatar {
@@ -117,15 +117,22 @@ mat-icon {
 }
 
 .current-user {
-    border-bottom: 1px solid lightgray;
     padding: 20px;
+}
+
+.current-user-title, .current-user-name {
     display: flex;
     flex-direction: row;
     align-items: center;
 }
 
+.current-user-title .mat-h1 {
+    margin-bottom: 0;
+    font-weight: bold;
+}
+
 .current-user .title {
-    margin-left: 20px;
+    margin-left: 10px;
 }
 
 .current-user .add {
@@ -143,4 +150,12 @@ mat-icon {
 
 .cancel-edit-button {
     color: gray;
+}
+
+.search {
+    padding: 0 20px;
+}
+
+.search mat-form-field {
+    width: 100%;
 }

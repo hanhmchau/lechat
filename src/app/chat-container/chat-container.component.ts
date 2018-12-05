@@ -1,3 +1,4 @@
+import { FormControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from './../services/auth.service';
 import { Component, ElementRef, ViewChild } from '@angular/core';
@@ -22,6 +23,7 @@ export class ChatContainerComponent {
     private me: Contact;
     private them: Contact;
     private myChannels: Channel[] = [];
+    private myFilteredChannels: Channel[] = [];
     private contacts: Contact[] = [];
     private unaddedContacts: Contact[] = [];
     private writingContacts: string[] = [];
@@ -42,6 +44,8 @@ export class ChatContainerComponent {
     private isNotWriting$: Subscription;
     private getWritingMembers$: Subscription;
     private scrollTop$: Subscription;
+    private searchChannelControl = new FormControl('', []);
+    private channelLoaded = false;
     @ViewChild('messageContainer') private messageContainer: ElementRef;
     @ViewChild('inputFile') private inputFile: ElementRef;
 
@@ -72,6 +76,19 @@ export class ChatContainerComponent {
             }
             this.scrollTop = container.scrollTop;
         });
+        this.searchChannelControl.valueChanges
+            .pipe(throttleTime(100))
+            .subscribe((val: string) => {
+                if (this.myChannels) {
+                    if (val.trim()) {
+                        this.myFilteredChannels = this.myChannels.filter(c =>
+                            c.name.toLowerCase().includes(val.toLowerCase())
+                        );
+                    } else {
+                        this.myFilteredChannels = this.myChannels;
+                    }
+                }
+            });
     }
 
     sendMessage(content: string) {
@@ -252,10 +269,15 @@ export class ChatContainerComponent {
 
     become(contact: Contact) {
         this.me = contact;
+        this.channelLoaded = false;
         this.messageService.getMyChannelsInfo(this.me).subscribe(channels => {
+            if (!channels.length) {
+                this.channelLoaded = true;
+            }
             combineLatest(
                 channels.map(c => this.messageService.getChannelData(c.id))
             ).subscribe(results => {
+                this.channelLoaded = true;
                 const channelInfos = results
                     .map((c, i) => ({
                         ...c,
@@ -285,6 +307,7 @@ export class ChatContainerComponent {
                         c.lastMessageSent ? c.lastMessageSent.getTime() : 0
                     )
                     .reverse();
+                this.myFilteredChannels = this.myChannels.slice();
                 const myChannelIds = this.myChannels.map(c => c.id);
                 this.unaddedContacts = this.contacts.filter(
                     c => c.id !== this.me.id && !myChannelIds.includes(c.id)
