@@ -48,7 +48,7 @@
         <ng-template #text>
             <div
                 class="content"
-                [innerHTML]="message.content | basicEmoji | linkify | emojify"
+                [innerHTML]="message.content | basicEmoji | linkify | emojify | markdown"
             ></div>
         </ng-template>
         <div class="preview-image" *ngIf="previewImage">

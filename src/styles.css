@@ -144,8 +144,6 @@ body {
 }
 
 .message-content p {
-    padding: none !important;
-    line-height: 0;
 }
 
 mat-icon {

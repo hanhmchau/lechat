@@ -32,11 +32,10 @@
 .content {
     background-color: #f6f6f6;
     margin-top: 5px;
-    padding: 15px;
+    padding: 1px 15px;
     border-radius: 5px;
     font-size: 14px;
     word-wrap: break-word;
-    white-space: pre-line;
     max-width: 500px;
 }
 
