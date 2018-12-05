@@ -14,6 +14,7 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "doc": "typedoc .\\server\\services\\ --out docs --module commonjs --hideGenerator --excludeExternals --excludeNotExported --excludePrivate  && touch docs/.nojekyll",
         "swagger": "ts-node ./server/swagger.ts",
+        "postinstall": "webpack --aot --env production",
         "tsc": "tsc"
     },
     "keywords": [],
