@@ -28,8 +28,9 @@ export class ChatContainerComponent {
     private unaddedContacts: Contact[] = [];
     private writingContacts: string[] = [];
     private messages: Message[] = [];
-    private activeChannel: string;
-    private activeContactOrChannel: string;
+    private activeChannelId: string;
+    private activeContactOrChannelId: string;
+    private activeChannel: Channel;
     private newMsg = '';
     private editingMessage: Message;
     private newMessageWritingSubject = new Subject();
@@ -64,9 +65,9 @@ export class ChatContainerComponent {
         });
         const container = this.messageContainer.nativeElement;
         this.become(this.authService.getCurrentUser());
-        container.addEventListener('scroll', (e: any) => {
+        const scrollHandler = (e: any) => {
             if (
-                this.activeChannel &&
+                this.activeChannelId &&
                 this.me &&
                 container.scrollTop <= this.scrollTop &&
                 container.scrollTop <= 150
@@ -75,7 +76,9 @@ export class ChatContainerComponent {
                 this.emitScrollTop();
             }
             this.scrollTop = container.scrollTop;
-        });
+        };
+        container.addEventListener('scroll', scrollHandler);
+        container.addEventListener('wheel', scrollHandler);
         this.searchChannelControl.valueChanges
             .pipe(throttleTime(100))
             .subscribe((val: string) => {
@@ -99,7 +102,7 @@ export class ChatContainerComponent {
                         content,
                         sender: this.me
                     },
-                    this.activeChannel
+                    this.activeChannelId
                 )
                 .subscribe();
         } else {
@@ -108,7 +111,7 @@ export class ChatContainerComponent {
                     content,
                     sender: this.me
                 },
-                this.activeChannel,
+                this.activeChannelId,
                 [this.me, this.them]
             );
         }
@@ -119,13 +122,13 @@ export class ChatContainerComponent {
         this.editingMessage.edited = true;
         this.messageService.updateMessage(
             this.editingMessage,
-            this.activeChannel
+            this.activeChannelId
         );
     }
 
     onMessageSent(content: string) {
         content = content.trim();
-        if (this.activeChannel && content.trim()) {
+        if (this.activeChannelId && content.trim()) {
             if (this.editingMessage) {
                 this.updateMessage(content);
                 this.cancelEditing();
@@ -172,6 +175,19 @@ export class ChatContainerComponent {
         return messages;
     }
 
+    isWithinSecondsOf(after: Date, before: Date, seconds: number): boolean {
+        if (!before || !after) {
+            return false;
+        }
+        if (before > after) {
+            const temp = before;
+            before = after;
+            after = temp;
+        }
+        const adjustedBefore = new Date(before.getTime() + seconds);
+        return adjustedBefore >= after;
+    }
+
     isWithinMinutesOf(after: Date, before: Date, minutes: number): boolean {
         if (!before || !after) {
             return false;
@@ -183,44 +199,49 @@ export class ChatContainerComponent {
     connect(contactId: string) {
         this.messages = [];
         this.unsubscribe();
-        this.activeContactOrChannel = contactId;
-        this.activeChannel =
+        this.activeContactOrChannelId = contactId;
+        this.activeChannelId =
             this.me.id < contactId
                 ? `${this.me.id}_${contactId}`
                 : `${contactId}_${this.me.id}`;
         this.them = this.contacts.find(c => c.id === contactId);
         this.getMessages$ = this.messageService
-            .getMessages(this.activeChannel, this.me)
+            .getMessages(this.activeChannelId, this.me)
             .subscribe(messages => {
                 this.messages = this.processPlacements(messages);
                 this.scrollToBottom();
-                this.messageService.read(this.activeChannel, this.me.id);
+                this.messageService.read(this.activeChannelId, this.me.id);
             });
         this.messageService.createIMChannel(
-            this.activeChannel,
+            this.activeChannelId,
             this.me,
             this.them
         );
         this.getChannelData$ = this.messageService
-            .getChannelData(this.activeChannel)
-            .subscribe();
+            .getChannelData(this.activeChannelId)
+            .subscribe(channel => {
+                this.activeChannel = {
+                    id: this.activeChannelId,
+                    name: (channel as any)[`${this.me.id}_name`] as string
+                };
+            });
         this.isNotWriting$ = this.newMessageWritingSubject
             .asObservable()
             .pipe(debounceTime(1500))
             .subscribe(() => {
                 this.messageService.setIsNotWriting(
                     this.me,
-                    this.activeChannel
+                    this.activeChannelId
                 );
             });
         this.isWriting$ = this.newMessageWritingSubject
             .asObservable()
             .pipe(throttleTime(1000))
             .subscribe(() => {
-                this.messageService.setIsWriting(this.me, this.activeChannel);
+                this.messageService.setIsWriting(this.me, this.activeChannelId);
             });
         this.getWritingMembers$ = this.messageService
-            .getWritingMembersInChannel(this.activeChannel)
+            .getWritingMembersInChannel(this.activeChannelId)
             .subscribe(contacts => {
                 this.writingContacts = contacts
                     .filter(c => c.id !== this.me.id)
@@ -261,12 +282,6 @@ export class ChatContainerComponent {
         return this.messageContainer.nativeElement.scrollTop;
     }
 
-    toDate(seconds: number) {
-        const date = new Date();
-        date.setSeconds(seconds);
-        return date;
-    }
-
     become(contact: Contact) {
         this.me = contact;
         this.channelLoaded = false;
@@ -282,26 +297,29 @@ export class ChatContainerComponent {
                     .map((c, i) => ({
                         ...c,
                         lastRead: channels[i].lastRead
-                            ? this.toDate(channels[i].lastRead.seconds)
+                            ? channels[i].lastRead.toDate()
                             : undefined
                     }))
-                    .map(c =>
-                        c.type === 'IM'
+                    .map(c => {
+                        const lastMessageSent = c.lastMessageSent
+                            ? (c.lastMessageSent as any).toDate()
+                            : undefined;
+                        return c.type === 'IM'
                             ? {
                                   ...c,
                                   name: (c as any)[
                                       `${this.me.id}_name`
                                   ] as string,
                                   id: (c as any)[this.me.id] as string,
-                                  lastMessageSent: c.lastMessageSent
-                                      ? this.toDate(
-                                            ((c as any).lastMessageSent as any)
-                                                .seconds
-                                        )
-                                      : undefined
+                                  lastMessageSent,
+                                  unread: lastMessageSent > c.lastRead && !this.isWithinSecondsOf(
+                                      lastMessageSent,
+                                      c.lastRead,
+                                      1
+                                  )
                               }
-                            : c
-                    );
+                            : c;
+                    });
                 this.myChannels = channelInfos
                     .sort(c =>
                         c.lastMessageSent ? c.lastMessageSent.getTime() : 0
@@ -320,7 +338,7 @@ export class ChatContainerComponent {
 
     delete(id: string) {
         this.messages = this.messages.filter(msg => msg.id !== id);
-        this.messageService.deleteMessage(id, this.activeChannel);
+        this.messageService.deleteMessage(id, this.activeChannelId);
     }
 
     cancelEditing() {
@@ -340,7 +358,7 @@ export class ChatContainerComponent {
     upload(ev: any) {
         this.loading = true;
         this.messageService
-            .uploadFile(this.me, this.activeChannel, ev.target.files[0])
+            .uploadFile(this.me, this.activeChannelId, ev.target.files[0])
             .subscribe(() => {
                 this.loading = false;
             });
@@ -348,7 +366,7 @@ export class ChatContainerComponent {
 
     loadMore() {
         this.messageService
-            .getMessages(this.activeChannel, this.me, this.messages[0], 3)
+            .getMessages(this.activeChannelId, this.me, this.messages[0], 3)
             .subscribe(messages => {
                 this.rememberScrollPosition();
                 this.messages = [...messages, ...this.messages];

@@ -10,4 +10,5 @@ export default class Channel {
     otherContact?: Contact;
     lastMessageSent?: Date;
     lastRead?: Date;
+    unread?: boolean;
 }

@@ -45,11 +45,8 @@
         <div *ngFor="let channel of myFilteredChannels">
             <div
                 class="channel"
-                [class.unread]="
-                    !channel.lastRead ||
-                    channel.lastRead < channel.lastMessageSent
-                "
-                [class.active]="activeContactOrChannel === channel.id"
+                [class.unread]="!channel.lastRead || channel.unread"
+                [class.active]="activeContactOrChannelId === channel.id"
                 (click)="connect(channel.id)"
             >
                 <div class="channel-avatar">
@@ -62,19 +59,39 @@
                 <div class="channel-name">{{ channel.name }}</div>
             </div>
         </div>
-        <div class="no-conversation" *ngIf="!myChannels.length && channelLoaded">
+        <div
+            class="no-conversation"
+            *ngIf="!myChannels.length && channelLoaded"
+        >
             You have no conversations yet.
         </div>
     </div>
     <div class="chat">
-        <div class="welcome" *ngIf="!activeChannel && me">
+        <div class="welcome" *ngIf="!activeChannelId && me">
             <h4>Welcome, {{ me.name }}</h4>
             <svg width="80" height="80" [jdenticonHash]="me.id"></svg>
         </div>
+        <!--
+            <div class="chat-header" *ngIf="activeChannelId">
+                <div class="info">
+                    <div class="mat-body-strong" *ngIf="activeChannel">{{ activeChannel.name }}</div>
+                    <div>
+                        <mat-icon>person</mat-icon>
+                        <span>1</span>
+                    </div>
+                </div>
+                <div class="search-messages">
+                    <mat-form-field>
+                        <input matInput type="text" placeholder="Search" />
+                        <mat-icon matSuffix>search</mat-icon>
+                    </mat-form-field>
+                </div>
+            </div>
+        -->
         <div
             #messageContainer
             class="message-container"
-            [class.none]="!activeChannel"
+            [class.none]="!activeChannelId"
         >
             <div class="messages">
                 <app-message
@@ -91,7 +108,7 @@
                 {{ writingContacts.length === 1 ? 'is' : 'are' }} writing...
             </div>
         </div>
-        <div class="chatbox" *ngIf="activeChannel">
+        <div class="chatbox" *ngIf="activeChannelId">
             <button
                 class="file-button"
                 mat-icon-button

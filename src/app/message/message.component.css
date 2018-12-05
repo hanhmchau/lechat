@@ -22,7 +22,7 @@
 
 .sender {
     font-size: 12px;
-    color: darkgray;
+    color: gray;
 }
 
 .message.me .sender {

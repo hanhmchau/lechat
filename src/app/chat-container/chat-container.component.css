@@ -96,7 +96,8 @@ mat-icon {
 }
 
 .channel.unread:not(.active) .channel-name {
-    font-weight: 700;
+    /* font-weight: 700; */
+    /* temporary */
 }
 
 .channel:hover {

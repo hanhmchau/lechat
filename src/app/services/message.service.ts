@@ -172,7 +172,7 @@ export class MessageService {
         channel: string,
         sender: Contact,
         before?: Message,
-        limit: number = 10
+        limit: number = 20
     ): Observable<Message[]> {
         const filter = before
             ? (ref: firebase.firestore.CollectionReference) =>
