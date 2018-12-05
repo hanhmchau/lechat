@@ -1,3 +1,4 @@
+import { ClickStopPropagationDirective } from './directives/click-stop-propagation.directive';
 import { AuthGuard } from './guards/auth.guard';
 import { AuthService } from './services/auth.service';
 import { HttpClientModule } from '@angular/common/http';
@@ -24,6 +25,7 @@ import { JdenticonHashDirective } from './directives/jdenticon-hash.directive';
 import { LoginComponent } from './login/login.component';
 import { MaterialModule } from './material.module';
 import { MessageComponent } from './message/message.component';
+import { PickerModule } from '@ctrl/ngx-emoji-mart';
 import {
     ContactListComponent,
     ContactModalComponent
@@ -56,6 +58,7 @@ const config = {
         EmojifyPipe,
         PrettyBytesPipe,
         JdenticonHashDirective,
+        ClickStopPropagationDirective,
         LoginComponent,
         RegisterComponent,
         ContactListComponent,
@@ -79,7 +82,8 @@ const config = {
         Ng2EmojiModule.forRoot(),
         InfiniteScrollModule,
         ScrollEventModule,
-        AngularFireAuthModule
+        AngularFireAuthModule,
+        PickerModule
     ],
     exports: [],
     providers: [

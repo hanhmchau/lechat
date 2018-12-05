@@ -9,10 +9,20 @@
             <svg width="40" height="40" [jdenticonHash]="me.id"></svg>
             <h4 class="title">{{ me.name }}</h4>
             <div class="add">
-                <app-contact-list
-                    [contacts]="this.unaddedContacts"
-                    (onConnect)="connect($event)"
-                ></app-contact-list>
+                <button mat-icon-button [matMenuTriggerFor]="setting">
+                    <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #setting="matMenu">
+                    <app-contact-list
+                        [me]="me"
+                        [contacts]="unaddedContacts"
+                        (onConnect)="connect($event)"
+                    ></app-contact-list>
+                    <button mat-menu-item (click)="logOut()">
+                        <mat-icon>exit_to_app</mat-icon>
+                        <span>Sign out</span>
+                    </button>
+                </mat-menu>
             </div>
         </div>
         <div *ngFor="let channel of myChannels">
@@ -75,6 +85,7 @@
                 >
             </button>
             <textarea
+                id="newMessage"
                 rows="1"
                 class="new-message-input"
                 #newMessage
@@ -95,7 +106,19 @@
                 >
                     Cancel Edit
                 </button>
-                <button class="emoji-button" mat-icon-button>
+                <mat-menu #emojiMenu="matMenu">
+                    <emoji-mart
+                        set="emojione"
+                        click-stop-propagation
+                        (emojiSelect)="addEmoji($event)"
+                    ></emoji-mart>
+                </mat-menu>
+
+                <button
+                    class="emoji-button"
+                    mat-icon-button
+                    [matMenuTriggerFor]="emojiMenu"
+                >
                     <mat-icon>tag_faces</mat-icon>
                 </button>
             </div>

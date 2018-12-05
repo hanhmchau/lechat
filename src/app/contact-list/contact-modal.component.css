@@ -2,6 +2,7 @@
     display: flex;
     align-items: center;
     cursor: pointer;
+    border-radius: 4px;
 }
 
 .channel-connect {
@@ -9,7 +10,7 @@
     flex-grow: 1;
 }
 
-.channel-connect:hover {
+.channel:hover {
     background-color: #ededed;
 }
 

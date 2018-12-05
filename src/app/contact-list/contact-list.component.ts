@@ -3,12 +3,11 @@ import Message from '../models/message';
 import Contact from '../models/contact';
 import { MessageService } from './../services/message.service';
 import Preview from '../models/preview';
-const getUrls = require('get-urls');
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 
 interface DialogData {
-    onConnect: EventEmitter<string>,
-    contacts: Contact[]
+    onConnect: EventEmitter<string>;
+    contacts: Contact[];
 }
 
 @Component({
@@ -17,10 +16,12 @@ interface DialogData {
     styleUrls: ['./contact-list.component.css']
 })
 export class ContactListComponent {
+    @Input() me: Contact;
     @Input() contacts: Contact[];
     @Output() onConnect = new EventEmitter<string>();
 
-    constructor(public dialog: MatDialog) {}
+    constructor(public dialog: MatDialog) {
+    }
 
     openDialog() {
         const dialogRef = this.dialog.open(ContactModalComponent, {
@@ -28,12 +29,13 @@ export class ContactListComponent {
             width: '25vw',
             data: {
                 onConnect: this.onConnect,
-                contacts: this.contacts
+                contacts: this.contacts.filter(c => c.id !== this.me.id)
             }
         });
     }
 }
 
+// tslint:disable-next-line:max-classes-per-file
 @Component({
     styleUrls: ['./contact-modal.component.css'],
     selector: 'app-contact-modal',
@@ -57,7 +59,7 @@ export class ContactModalComponent {
     onNoClick(): void {
         this.dialogRef.close();
     }
-    
+
     private alphabetizeContacts(contacts: Contact[]): Map<string, Contact[]> {
         const contactMap = new Map<string, Contact[]>();
         contacts = contacts.sort((a, b) => a.name.localeCompare(b.name));

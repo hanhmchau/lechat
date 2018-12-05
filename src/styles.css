@@ -1,5 +1,6 @@
 @import '~@angular/material/prebuilt-themes/deeppurple-amber.css';
 @import '~ng2-emoji/css/ng2-emoji.css';
+@import "~@ctrl/ngx-emoji-mart/picker.css";
 
 body {
     margin: 0;

@@ -1,3 +1,4 @@
+import { Router } from '@angular/router';
 import { AuthService } from './../services/auth.service';
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { Subject, combineLatest, Observable, Subscription } from 'rxjs';
@@ -10,6 +11,7 @@ import Channel from '../models/channel';
 import Contact from '../models/contact';
 import Message from '../models/message';
 import { MessageService } from './../services/message.service';
+import { insertAtCaret } from '../utils';
 
 @Component({
     selector: 'app-chat-container',
@@ -45,12 +47,16 @@ export class ChatContainerComponent {
 
     constructor(
         private messageService: MessageService,
-        private authService: AuthService
+        private authService: AuthService,
+        private router: Router
     ) {}
 
     ngOnInit(): void {
         this.messageService.getContacts().subscribe(contacts => {
             this.contacts = contacts;
+            if (this.unaddedContacts) {
+                this.unaddedContacts = this.contacts;
+            }
         });
         const container = this.messageContainer.nativeElement;
         this.become(this.authService.getCurrentUser());
@@ -335,6 +341,16 @@ export class ChatContainerComponent {
 
     triggerInputFile() {
         (this.inputFile.nativeElement as HTMLElement).click();
+    }
+
+    logOut() {
+        this.authService.logOut();
+        this.router.navigate(['/sign-in']);
+    }
+
+    addEmoji(emoji: any) {
+        const native = emoji.emoji.native;
+        insertAtCaret('newMessage', native);
     }
 
     private scrollToBottom() {
