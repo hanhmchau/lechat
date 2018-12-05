@@ -1,4 +1,4 @@
-<div class="message" [class.me]="message.sender.id === me.id">
+<div class="message" [class.me]="message.sender.id === me.id" [class.first]="message.placement === 'first'">
     <div class="actions" *ngIf="message.sender.id === me.id">
         <button class="menu" mat-icon-button [matMenuTriggerFor]="menu">
             <mat-icon>more_vert</mat-icon>

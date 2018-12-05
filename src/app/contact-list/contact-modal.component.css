@@ -1,0 +1,24 @@
+.channel {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.channel-connect {
+    justify-self: flex-end;
+    flex-grow: 1;
+}
+
+.channel-connect:hover {
+    background-color: #ededed;
+}
+
+.channel-connect button {
+    float: right;
+}
+
+.no-conversation {
+    text-align: center;
+    padding-top: 30px;
+    color: gray;
+}

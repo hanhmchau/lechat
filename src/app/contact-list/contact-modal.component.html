@@ -1,0 +1,20 @@
+<h2 mat-dialog-title>New chats</h2>
+<mat-dialog-content class="mat-contacts">
+    <div *ngIf="!contacts.length">There is no new contact.</div>
+    <div class="group" *ngFor="let group of (contactGroups | keyvalue)">
+        <h4>{{ group.key }}</h4>
+        <div
+            class="channel"
+            (click)="connect(contact.id)"
+            *ngFor="let contact of group.value"
+        >
+            <div class="channel-avatar">
+                <svg width="40" height="40" [jdenticonHash]="contact.id"></svg>
+            </div>
+            <div class="channel-name">{{ contact.name }}</div>
+            <div class="channel-connect">
+                <button mat-icon-button><mat-icon>person_add</mat-icon></button>
+            </div>
+        </div>
+    </div>
+</mat-dialog-content>

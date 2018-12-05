@@ -21,6 +21,7 @@ export class ChatContainerComponent {
     private them: Contact;
     private myChannels: Channel[] = [];
     private contacts: Contact[] = [];
+    private unaddedContacts: Contact[] = [];
     private writingContacts: string[] = [];
     private messages: Message[] = [];
     private activeChannel: string;
@@ -127,6 +128,35 @@ export class ChatContainerComponent {
         }
     }
 
+    processPlacements(messages: Message[]): Message[] {
+        let markedFirst = 0;
+        for (let i = 0; i < messages.length; i++) {
+            const thisMsg = messages[i];
+            const markedMsg = messages[markedFirst];
+            if (
+                i === 0 ||
+                thisMsg.sender.id !== markedMsg.sender.id ||
+                !this.isWithinMinutesOf(
+                    thisMsg.timestamp,
+                    markedMsg.timestamp,
+                    15
+                )
+            ) {
+                thisMsg.placement = 'first';
+                markedFirst = i;
+            }
+        }
+        return messages;
+    }
+
+    isWithinMinutesOf(after: Date, before: Date, minutes: number): boolean {
+        if (!before || !after) {
+            return false;
+        }
+        const adjustedBefore = new Date(before.getTime() + 60000 * minutes);
+        return adjustedBefore >= after;
+    }
+
     connect(contactId: string) {
         this.messages = [];
         this.unsubscribe();
@@ -139,7 +169,7 @@ export class ChatContainerComponent {
         this.getMessages$ = this.messageService
             .getMessages(this.activeChannel, this.me)
             .subscribe(messages => {
-                this.messages = messages;
+                this.messages = this.processPlacements(messages);
                 this.scrollToBottom();
                 this.messageService.read(this.activeChannel, this.me.id);
             });
@@ -237,8 +267,8 @@ export class ChatContainerComponent {
                                   id: (c as any)[this.me.id] as string,
                                   lastMessageSent: c.lastMessageSent
                                       ? this.toDate(
-                                            ((c as any)
-                                                .lastMessageSent as any).seconds
+                                            ((c as any).lastMessageSent as any)
+                                                .seconds
                                         )
                                       : undefined
                               }
@@ -249,7 +279,10 @@ export class ChatContainerComponent {
                         c.lastMessageSent ? c.lastMessageSent.getTime() : 0
                     )
                     .reverse();
-                console.log(this.myChannels);
+                const myChannelIds = this.myChannels.map(c => c.id);
+                this.unaddedContacts = this.contacts.filter(
+                    c => c.id !== this.me.id && !myChannelIds.includes(c.id)
+                );
                 // use this to build the contact list
                 // compare lastRead with lastMessageSent to show unread channels
             });

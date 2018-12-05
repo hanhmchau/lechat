@@ -24,6 +24,10 @@ import { JdenticonHashDirective } from './directives/jdenticon-hash.directive';
 import { LoginComponent } from './login/login.component';
 import { MaterialModule } from './material.module';
 import { MessageComponent } from './message/message.component';
+import {
+    ContactListComponent,
+    ContactModalComponent
+} from './contact-list/contact-list.component';
 import { NotFoundComponent } from './not-found/not-found.component';
 import { BasicEmojiPipe } from './pipes/basic-emoji.pipe';
 import { EmojifyPipe } from './pipes/emojify.pipe';
@@ -53,7 +57,9 @@ const config = {
         PrettyBytesPipe,
         JdenticonHashDirective,
         LoginComponent,
-        RegisterComponent
+        RegisterComponent,
+        ContactListComponent,
+        ContactModalComponent
     ],
     imports: [
         BrowserModule,
@@ -84,6 +90,7 @@ const config = {
         AuthGuard
         // add injectable things here
     ],
-    bootstrap: [AppComponent]
+    bootstrap: [AppComponent],
+    entryComponents: [ContactModalComponent]
 })
 export class AppModule {}

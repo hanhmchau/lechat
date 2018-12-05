@@ -5,56 +5,50 @@
 ></mat-progress-bar>
 <div class="container">
     <div class="sidebar">
-        <mat-tab-group>
-            <mat-tab>
-                <ng-template mat-tab-label>
-                    <mat-icon class="example-tab-icon">chat</mat-icon>
-                </ng-template>
-                <div *ngFor="let channel of myChannels">
-                    <div
-                        class="channel"
-                        [class.unread]="
-                            lastRead ||
-                            channel.lastRead < channel.lastMessageSent
-                        "
-                        [class.active]="activeContactOrChannel === channel.id"
-                        (click)="connect(channel.id)"
-                    >
-                        <div class="channel-avatar">
-                            <svg
-                                width="40"
-                                height="40"
-                                [jdenticonHash]="channel.id"
-                            ></svg>
-                        </div>
-                        <div class="channel-name">{{ channel.name }}</div>
-                    </div>
+        <div class="current-user" *ngIf="me">
+            <svg width="40" height="40" [jdenticonHash]="me.id"></svg>
+            <h4 class="title">{{ me.name }}</h4>
+            <div class="add">
+                <app-contact-list
+                    [contacts]="this.unaddedContacts"
+                    (onConnect)="connect($event)"
+                ></app-contact-list>
+            </div>
+        </div>
+        <div *ngFor="let channel of myChannels">
+            <div
+                class="channel"
+                [class.unread]="
+                    !channel.lastRead ||
+                    channel.lastRead < channel.lastMessageSent
+                "
+                [class.active]="activeContactOrChannel === channel.id"
+                (click)="connect(channel.id)"
+            >
+                <div class="channel-avatar">
+                    <svg
+                        width="40"
+                        height="40"
+                        [jdenticonHash]="channel.id"
+                    ></svg>
                 </div>
-                <div class="no-conversation" *ngIf="!myChannels.length">
-                    You have no conversations yet.
-                </div>
-            </mat-tab>
-            <mat-tab>
-                <ng-template mat-tab-label>
-                    <mat-icon class="example-tab-icon">person</mat-icon>
-                </ng-template>
-                <div class="contact" *ngFor="let contact of contacts">
-                    <div class="channel" (click)="connect(contact.id)">
-                        <div class="channel-avatar">
-                            <svg
-                                width="40"
-                                height="40"
-                                [jdenticonHash]="contact.id"
-                            ></svg>
-                        </div>
-                        <div class="channel-name">{{ contact.name }}</div>
-                    </div>
-                </div>
-            </mat-tab></mat-tab-group
-        >
+                <div class="channel-name">{{ channel.name }}</div>
+            </div>
+        </div>
+        <div class="no-conversation" *ngIf="!myChannels.length">
+            You have no conversations yet.
+        </div>
     </div>
     <div class="chat">
-        <div #messageContainer class="message-container">
+        <div class="welcome" *ngIf="!activeChannel && me">
+            <h4>Welcome, {{ me.name }}</h4>
+            <svg width="80" height="80" [jdenticonHash]="me.id"></svg>
+        </div>
+        <div
+            #messageContainer
+            class="message-container"
+            [class.none]="!activeChannel"
+        >
             <div class="messages">
                 <app-message
                     [message]="message"
@@ -93,13 +87,18 @@
             ></textarea>
             <input #inputFile type="file" (change)="upload($event)" />
             <div class="buttons">
+                <button
+                    mat-button
+                    class="cancel-edit-button"
+                    *ngIf="editingMessage"
+                    (click)="cancelEditing()"
+                >
+                    Cancel Edit
+                </button>
                 <button class="emoji-button" mat-icon-button>
                     <mat-icon>tag_faces</mat-icon>
                 </button>
             </div>
-            <button *ngIf="editing" (click)="cancelEditing()">
-                Cancel Edit
-            </button>
         </div>
     </div>
 </div>

@@ -8,4 +8,5 @@ export default class Message {
     timestamp?: Date;
     edited?: boolean;
     attachment?: Attachment;
+    placement?: string;
 }
