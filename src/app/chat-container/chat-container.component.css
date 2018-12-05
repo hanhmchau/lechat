@@ -92,7 +92,7 @@ mat-icon {
 }
 
 .channel.active {
-    background-color: white;
+    background-color: #fdfcfc;
 }
 
 .channel.unread:not(.active) .channel-name {
